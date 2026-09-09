@@ -1,0 +1,35 @@
+name: Validate Security Layer
+
+# Fast, deterministic pass on the security layer itself — runs the definition
+# coherence suite (schemas, YAML, rule/incident references, finance gate
+# presence). This is the "guardian of the guard": it keeps CI errors out and
+# makes the layer auditable on every change. See SECURITY_POLICY.md §19 and
+# security/README.md.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Security Layer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Validate structure, definitions, rules, incidents, secret sweep
+        run: python3 security/tests/validate_security.py
+
+      - name: Verify changelog present and non-empty
+        run: |
+          test -s security/SECURITY_CHANGELOG.md || { echo "missing changelog"; exit 1; }
+          echo "SECURITY_CHANGELOG.md present."

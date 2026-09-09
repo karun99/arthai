@@ -1,0 +1,49 @@
+threat_id: ASDR-006
+name: Insecure Infrastructure & Secret Configuration
+category: infrastructure
+severity: High
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description:
+  Deployment and infrastructure definitions (docker-compose, Vercel/Railway
+  environment wiring, Dockerfiles) embed secrets, bind admin services publicly,
+  run containers with excess privileges, or ship default credentials for
+  PostgreSQL, Redis, ChromaDB, or Neo4j.
+
+attack_pattern:
+  - docker-compose.yml hardcoding RAZORPAY_KEY_SECRET or DB passwords
+  - Redis/Neo4j exposed on public ports without auth
+  - container running as root with mounted wallet directories
+  - .env.example documenting real (even test) credential values
+  - ChromaDB bound to 0.0.0.0 without network policy
+
+affected_component: backend/docker-compose.yml, backend/docker-compose.prod.yml, Dockerfiles, serverless env config
+affected_technology: Docker, Docker Compose, Redis, PostgreSQL, Neo4j, ChromaDB, Vercel, Railway, Render
+
+indicators:
+  - secrets present in compose/env files
+  - containers mapping 6379/9080/7474/7687 to 0.0.0.0
+  - service definition lacking HEALTHCHECK / resource limits
+  - Dockerfile referencing *KEY_SECRET build args as literal values
+
+detection:
+  - hardcoded-secret CI gate covers compose and env templates
+  - config-validation workflow checks compose parseability
+  - scheduled port-binding scan of compose files
+  - manual release checklist for infra diffs
+
+mitigation:
+  - inject all secrets via orchestrator env/render services, never in files
+  - bind admin/data stores to internal networks only
+  - run containers as non-root with read-only wallet mounts
+  - require auth on every data store; rotate defaults at first deploy
+  - keep ChromaDB/Neo4j inside the backend network
+
+validation:
+  - docker compose -f backend/docker-compose.yml config parses without secrets
+  - grep gate blocks secret literals in any infra file
+  - containers declare security_opt and non-root user for wallet services
+
+reference: SECURITY_POLICY.md Sections 5, 8.4

@@ -1,0 +1,49 @@
+threat_id: ASDR-007
+name: Unsafe Automation
+category: automation
+severity: High
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description:
+  CI/CD workflows, agent scripts, and automated jobs run with excessive
+  permissions, trust untrusted inputs, or execute code that can push, deploy,
+  or spend. This includes workflow files that use pull_request_target with
+  untrusted code, jobs writing to main, and agent marketplaces/apps that can
+  modify workflows.
+
+attack_pattern:
+  - workflow grant of write: contents + security-events + id-token on PRs
+  - actions pinned to mutable tags instead of SHAs
+  - pull_request_target job checking out and executing attacker-controlled code
+  - AI-agent app (s-ai style) with push/deploy tokens in public CI
+  - automation invoking payment MCP tools without the 6-layer gate
+
+affected_component: .github/workflows, backend/services/llm-orchestrator, s-ai integration, app/api/arthai/think
+affected_technology: GitHub Actions, OIDC, Node.js, Python
+
+indicators:
+  - workflow using pull_request_target without trusted-role input validation
+  - action references by branch/tag name rather than commit SHA
+  - workflow secret used by a job that runs unverified code
+  - agent config enabling autonomous payment tool calls without policy checks
+
+detection:
+  - CodeQL workflow/supply-chain queries on .github
+  - workflow integrity validation in config-validation job
+  - threat-definition self-test in regression workflow
+
+mitigation:
+  - scope permissions to the minimum (contents: read default)
+  - pin third-party actions to full commit SHAs
+  - never checkout+run untrusted PR code in privileged contexts
+  - keep AI agents sandboxed; require human gate before any payment intent
+  - gate any action calling financial MCP tools behind policy-engine
+
+validation:
+  - workflow lint rejects pull_request_target with arbitrary script execution
+  - actions referenced by SHA-only in all workflows
+  - a fake PR simulation shows agent cannot reach payment tools un-gated
+
+reference: SECURITY_POLICY.md Sections 5, 8.1

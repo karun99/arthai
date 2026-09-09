@@ -1,0 +1,48 @@
+threat_id: ASDR-005
+name: Sensitive KYC / PII Data Exposure
+category: data
+severity: Critical
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description:
+  Consumer KYC data (name, email, income range, expenses) or derived spending
+  signals are exposed in logs, client bundles, analytics, or API responses
+  without encryption or anonymization. ArthAI's spending-power index is built
+  from PII; raw PII must never leave the encrypted store except as anonymized
+  aggregate signals.
+
+attack_pattern:
+  - console.log / error handlers printing request bodies or KYC fields
+  - demo mock routes shipping realistic PII into NEXT_PUBLIC bundles
+  - API returning SPI with personally-identifying fields attached
+  - ChromaDB/Neo4j embeddings keyed on raw PII stored unencrypted
+
+affected_component: app/app/api, app/components/forms, backend/services/rag-service, backend/services/predictive-engine, demo/app/api/mock
+affected_technology: Next.js, PostgreSQL, ChromaDB, Neo4j, Redis
+
+indicators:
+  - PII fields present in server logs or error payloads
+  - KYC fields referenced in client-side components not guarded by role
+  - vector store documents containing raw names/emails
+  - response DTO exposing internal PII attributes
+
+detection:
+  - grep/static rule against KYC field names in log/error paths
+  - CodeQL data-flow taint check on PII sinks
+  - PR review checklist item for PII handling on every form/route change
+
+mitigation:
+  - encrypt KYC at rest (AES-256) and in structured DB columns
+  - strip PII from all loggers and error envelopes
+  - expose only anonymized/aggregate SPI to vendors
+  - separate vector documents from PII; key embeddings on pseudonymous IDs
+  - demo uses synthetic data only, clearly tagged as fake
+
+validation:
+  - unit test: log callbacks receive KYC payload => nothing PII emitted
+  - API response schema for vendor endpoints contains no PII fields
+  - demo dataset contains zero real personal data markers
+
+reference: SECURITY_POLICY.md Sections 5 (KYC privacy), 8.2

@@ -1,0 +1,56 @@
+threat_id: ASDR-009
+name: Agentic Payment Fraud
+category: finance
+severity: Critical
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description: >-
+  An AI agent (S-AI swarm, recommendation engine, or compromised MCP tool)
+  initiates a payment or payout that the merchant never intended: phantom
+  intent, money-mule address, manipulated recommendation, repeated/double
+  billing, or unauthorized campaign spend. Failure to enforce the 6-layer gate
+  (bounded, gated, explainable, anomaly-checked, reputation-checked, audited)
+  directly causes loss of funds.
+
+attack_pattern:
+  - prompt injection steers the swarm into recommending a payout to attacker-controlled
+    recipient while omitting the approval gate
+  - lacking idempotency_key: retry loop double-charges a merchant
+  - budget/cap comparison done post-hoc instead of pre-execution
+  - recipient reputation check skipped for crypto rail transfers
+  - approval step bypassed because threshold comparison is misconfigured
+
+affected_component: app/lib/policy-engine.ts, backend/mcp-servers/x402-gateway, backend/mcp-servers/vyapaar-mcp, demo governance mocks
+affected_technology: Node.js, Python, Razorpay API, x402/Circle, Redis, OWS
+
+indicators:
+  - payment tool callable by agent process without policy-engine guard
+  - idempotency_key absent or deterministic guessable without nonce
+  - approval event (approved_by/approved_at) missing from execution log
+  - anomaly flag ignored before transfer execution
+  - recipient address/list not reputation-checked
+
+detection:
+  - policy-engine unit/integration tests on every payment path
+  - static guard: payment tools must be wrapped by authorize_intent()
+  - audit-log assertions require decision+rejection records per action
+  - repository scan flags any direct Razorpay/Circle SDK call outside the gateway
+
+mitigation:
+  - enforce pre-execution 6-layer gate in a single choke point (policy-engine.ts)
+  - require merchant approval above threshold with recorded identity
+  - generate idempotency_key = SHA-256(action_id+merchant_id+amount+nonce);
+    Redis atomic lock; return cached result on replay
+  - reputation-check recipients on both fiat and crypto rails
+  - run anomaly detection before execution; block on flags
+  - write full-chain audit log (VPersuas) at every stage
+
+validation:
+  - unit test: double-submit with same idempotency key yields one charge
+  - unit test: proposed budget > merchant cap => execution blocked
+  - unit test: approval required threshold enforcement holds in demo fixture
+  - integration: x402 gateway refuses unsigned/unapproved transfers
+
+reference: SECURITY_POLICY.md Sections 1, 5

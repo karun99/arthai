@@ -1,0 +1,21 @@
+rule_id: RULE-SEC-001
+name: Hardcoded Credential Pattern
+threat_ref: ASDR-001
+enforced: true
+enforced_by: ".github/workflows/security.yml (job: deny-hardcoded-secrets)"
+
+description: >-
+  Blocks commits, pushes, and PRs containing obvious credential literals:
+  private keys, long hex tokens, AWS/OpenAI-style access keys, GitHub tokens.
+
+patterns:
+  - "BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY"
+  - "AKIA[0-9A-Z]{16}"
+  - "sk-or-v1-[A-Za-z0-9]{20,}"
+  - "sk-[A-Za-z0-9]{24,}"
+  - "ghp_[A-Za-z0-9]{36}"
+  - "gho_[A-Za-z0-9]{36}"
+  - "github_pat_[A-Za-z0-9_]{20,}"
+  - "xox[baprs]-[A-Za-z0-9-]{10,}"
+
+exclude: node_modules, .git, .next, dist, __pycache__, .ruff_cache, coverage, build

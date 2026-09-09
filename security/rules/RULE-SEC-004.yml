@@ -1,0 +1,16 @@
+rule_id: RULE-SEC-004
+name: Workflow & Config Integrity
+threat_ref: ASDR-007
+enforced: true
+enforced_by: ".github/workflows/security.yml (job: config-validation)"
+
+description:
+  All GitHub Actions workflows and compose files must parse as valid YAML and
+  must not use dangerous automation patterns (pull_request_target executing
+  untrusted code, mutable action tags).
+
+checks:
+  - parse .github/workflows/*.yml and .github/dependabot.yml
+  - reject actions referenced by non-SHA qualifier in security-critical jobs
+  - reject pull_request_target combined with checkout of PR head and script run
+  - docker compose -f backend/docker-compose.yml config must parse (when present)

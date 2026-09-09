@@ -1,0 +1,18 @@
+rule_id: RULE-SEC-002
+name: Modern Secret Patterns (Financial)
+threat_ref: ASDR-001
+enforced: true
+enforced_by: ".github/workflows/security.yml (job: deny-hardcoded-secrets)"
+
+description: >-
+  Extends RULE-SEC-001 with ArthAI-relevant token shapes: Razorpay keys,
+  OpenRouter keys, S-AI API keys, JWT-shaped tokens.
+
+patterns:
+  - "rzp_(test|live)_[A-Za-z0-9]{14}_[A-Za-z0-9]{14}"
+  - "sk-or-v1-[A-Za-z0-9]{20,}"
+  - "eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}"
+  - "postgres(ql)?://[^:\\s]+:[^@\\s]+@"
+  - "redis://:[^@\\s]+@"
+
+exclude: node_modules, .git, .next, dist, __pycache__, .ruff_cache

@@ -1,0 +1,48 @@
+threat_id: ASDR-004
+name: Vulnerable Dependency / Supply Chain
+category: dependencies
+severity: High
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description:
+  A dependency or transitive dependency used by demo/, app/, backend/, or an MCP
+  server carries a known vulnerability, is deprecated, or is replaced by a
+  malicious package (dependency confusion / typosquatting). ArthAI also forks
+  third-party MCP servers; un-reviewed forks are a supply-chain surface.
+
+attack_pattern:
+  - npm/pip install of an unpinned or compromised version
+  - typosquatted package name replacing razorpay/vyaapaar/ows-mcp helpers
+  - forked MCP server introduces malicious code or a backdoor
+  - dependency-confusion: private package name resolved from public registry
+
+affected_component: demo/package.json, app/package.json, backend/*/requirements.txt, backend/docker-compose*.yml
+affected_technology: npm, pnpm, pip, Docker
+
+indicators:
+  - Dependabot alert / advisory match for a locked version
+  - package version range too loose (^ with zero lockfile review)
+  - fork drift from upstream MCP server repo
+  - duplicate near-miss package names in lockfile
+
+detection:
+  - Dependabot security + version updates daily/weekly
+  - Dependency Review action on every PR (fail-on-severity high)
+  - CodeQL supply-chain queries
+  - periodic lockfile audit and fork-commit comparison
+
+mitigation:
+  - pin exact versions and commit lockfiles
+  - apply Dependabot security PRs within agreed SLA (critical: 48h)
+  - audit forks: diff against upstream, re-verify before each release
+  - scope registries to official sources; disallow private-name confusion
+  - remove unused dependencies
+
+validation:
+  - dependency-review.yml passes PR gate
+  - lockfile differs only by intended dependency changes
+  - backend image build reproducible via docker-compose build in CI
+
+reference: SECURITY_POLICY.md Sections 8.3, 16

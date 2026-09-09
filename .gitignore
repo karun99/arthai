@@ -1,0 +1,59 @@
+# ─── ArthAI .gitignore ─────────────────────────────────────────────
+# See SECURITY_POLICY.md Sections 5, 8.4 and RULE-SEC-001/002/005.
+# Never uncomment .env lines; real secrets live in deployment secrets.
+
+# ── Dependencies / builds ────────────────────────────────────────
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+.pnpm-store/
+__pycache__/
+*.pyc
+.ruff_cache/
+.mypy_cache/
+
+# ── Environment & secrets (keep them OUT) ────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+service-account.json
+*.secret
+*_secret.json
+secrets.*
+config.local.*
+
+# ── Wallet material (crypto rail) ─────────────────────────────────
+*.seed
+*.mnemonic
+*.keystore
+wallet-*.json
+aws-credentials
+.bip39*
+
+# ── Databases / local data ───────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.log
+server.log
+.vercel/
+
+# ── OS / editor ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

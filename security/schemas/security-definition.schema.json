@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/karun99/arthai/security/schemas/security-definition.schema.json",
+  "title": "ArthAI Security Definition",
+  "description": "Schema for a single threat definition (ASDR-*) in the arthai adaptive security layer.",
+  "type": "object",
+  "required": [
+    "threat_id",
+    "name",
+    "category",
+    "severity",
+    "description",
+    "indicators",
+    "detection",
+    "mitigation",
+    "validation",
+    "status"
+  ],
+  "properties": {
+    "threat_id": { "type": "string", "pattern": "^ASDR-[0-9]{3}$" },
+    "name": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": [
+        "authentication",
+        "authorization",
+        "injection",
+        "dependencies",
+        "data",
+        "infrastructure",
+        "automation",
+        "availability",
+        "finance"
+      ]
+    },
+    "severity": { "type": "string", "enum": ["Critical", "High", "Medium", "Low", "Informational"] },
+    "status": { "type": "string", "enum": ["proposed", "validated", "active", "updated", "deprecated"] },
+    "description": { "type": "string" },
+    "attack_pattern": { "type": "string" },
+    "affected_component": { "type": "string" },
+    "affected_technology": { "type": "string" },
+    "indicators": { "type": "array", "items": { "type": "string" } },
+    "detection": { "type": "array", "items": { "type": "string" } },
+    "mitigation": { "type": "array", "items": { "type": "string" } },
+    "validation": { "type": "array", "items": { "type": "string" } },
+    "reference": { "type": "string" },
+    "first_observed": { "type": "string", "format": "date" },
+    "last_updated": { "type": "string", "format": "date" },
+    "revision_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "change": { "type": "string" }
+        },
+        "required": ["date", "change"]
+      }
+    }
+  },
+  "additionalProperties": false
+}

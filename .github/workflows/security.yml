@@ -1,0 +1,120 @@
+name: Security Scan
+
+# ArthAI security gate — runs on every push and PR.
+# Secret detection (Gitleaks), hardcoded-credential block (incl. wallet
+# material), workflow/config validation, and the security-layer suite.
+# See SECURITY_POLICY.md (Sections 8.1, 8.2).
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  gitleaks:
+    name: Secret Detection (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks (full history)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
+          GITLEAKS_ENABLE_COMMENTS: true
+
+  deny-hardcoded-secrets:
+    name: Block Hardcoded Secrets (incl. wallet material)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for hardcoded credential patterns
+        run: |
+          set -e
+          if grep -RInE \
+            --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.next \
+            --exclude-dir=dist --exclude-dir=__pycache__ --exclude-dir=.ruff_cache \
+            --exclude-dir=coverage --exclude-dir=build \
+            --exclude=pnpm-lock.yaml --exclude=package-lock.json \
+            -e "BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY" \
+            -e "AKIA[0-9A-Z]{16}" \
+            -e "sk-or-v1-[A-Za-z0-9]{20,}" \
+            -e "sk-[A-Za-z0-9]{24,}" \
+            -e "ghp_[A-Za-z0-9]{36}" \
+            -e "gho_[A-Za-z0-9]{36}" \
+            -e "github_pat_[A-Za-z0-9_]{20,}" \
+            -e "xox[baprs]-[A-Za-z0-9-]{10,}" \
+            -e "rzp_(test|live)_[A-Za-z0-9]{14}_[A-Za-z0-9]{14}" \
+            -e "OWS_(PRIVATE|SEED|MNEMONIC)_KEY[ ]*=[ ]*[^ ]+" \
+            -e "SEED_PHRASE[ ]*=[ ]*[^ ]+" \
+            . 2>/dev/null; then
+            echo "::error::Hardcoded credential / wallet material detected. Do not commit keys or seeds."
+            exit 1
+          else
+            echo "No hardcoded credential patterns found."
+          fi
+
+  config-validation:
+    name: Workflow & Config Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate YAML workflow/config files
+        run: |
+          python3 - <<'PY'
+          import glob, sys, yaml
+          fails = 0
+          paths = (glob.glob('.github/workflows/*.yml')
+                   + glob.glob('.github/workflows/*.yaml')
+                   + glob.glob('.github/dependabot.yml'))
+          for p in paths:
+              try:
+                  with open(p) as f:
+                      yaml.safe_load(f)
+                  print(f"OK  {p}")
+              except Exception as e:
+                  fails += 1
+                  print(f"FAIL {p}: {e}")
+          if fails:
+              sys.exit(1)
+          PY
+
+      - name: Validate compose files parse (when present)
+        run: |
+          set -e
+          if command -v docker >/dev/null 2>&1 && ls backend/docker-compose*.yml >/dev/null 2>&1; then
+            for f in backend/docker-compose*.yml; do
+              docker compose -f "$f" config --quiet && echo "OK  $f"
+            done
+          else
+            echo "docker or compose files not available — skipping."
+          fi
+
+  security-layer:
+    name: Security Layer Validation Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+
+      - name: Run security validation suite
+        run: python3 security/tests/validate_security.py

@@ -1,0 +1,14 @@
+incident_id: INC-2026-001
+threat_id: ASDR-001
+date_detected: 2026-09-09
+status: resolved
+description: Baseline creation of the arthai security layer. No active incident recorded.
+affected_component: repository-wide
+detection_method: baseline-scan
+observed_behaviour: No secrets or PII present at repository initialization.
+severity: Informational
+action: security-layer-initialized
+patch_remediation: none required
+validation: passed
+resolution_date: 2026-09-09
+lessons_learned: Baseline scan establishes a clean starting point for future regression comparison.

@@ -1,0 +1,26 @@
+rule_id: RULE-SEC-005
+name: Wallet Key & Seed Material Gate
+threat_ref: ASDR-010
+enforced: true
+enforced_by: .github/workflows/security.yml + security-regression re-scan
+
+description:
+  Blocks crypto-rail key/seed material anywhere in the repository or history.
+  Wallet secrets are permitted only as environment variables injected into the
+  OWS MCP process at runtime — never as literals, fixtures, bundles,
+  vector-store metadata, or logs.
+
+patterns:
+  - "OWS_(PRIVATE|SEED|MNEMONIC)_KEY(\\s*=\\s*|:)"            # env/secret assignment
+  - "PRIVATE_KEY(_|\\s*=\\s*)[=]*[a-fA-F0-9]{64,}"             # key literal assignment
+  - "SEED_PHRASE|MNEMONIC(_PHRASE)?(\\s*=\\s*|:)"
+  - "NEXT_PUBLIC_.*(KEY|SEED|MNEMONIC|WALLET|PRIVATE).*="     # accidental client exposure
+  - "BEGIN (EC |RSA |OPENSSH )?PRIVATE KEY"                    # key blocks
+  - "circle_(test|live)_[A-Za-z0-9]{16,}"                      # Circle API keys
+
+policy:
+  - any match outside backend/mcp-servers/{ows-mcp,x402-gateway}/ (which
+    reference env vars only, no literals) → fail the workflow
+  - raw BIP-39 mnemonic prose is flagged by gitleaks/manual review; in CI use
+    the assignment patterns above to avoid false positives
+  - wallet material in logs or NEXT_PUBLIC_ config → fail

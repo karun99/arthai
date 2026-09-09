@@ -1,0 +1,49 @@
+threat_id: ASDR-010
+name: Wallet Key / Seed Exposure
+category: finance
+severity: Critical
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description:
+  Crypto-rail secrets — OWS/Circle wallet private keys, seed phrases, or
+  signing material for x402 USDC transfers — appear in the repository, the
+  frontend bundle, agent processes, or logs. Exposure of wallet material
+  equals loss of the full wallet balance with no reversal channel.
+
+attack_pattern:
+  - seed phrase or private key committed in .env, fixtures, or mock data
+  - NEXT_PUBLIC_ variable leaking wallet bytes into the client bundle
+  - agent process (llm-orchestrator, s-ai) given wallet key at runtime
+  - wallet mnemonic logged by the MCP wrapper during startup/debugging
+  - key material stored in ChromaDB/Neo4j vector/metadata for "context"
+
+affected_component: backend/mcp-servers/ows-mcp, backend/mcp-servers/x402-gateway, app/api, demo mock wallet
+affected_technology: Node.js, Python, Circle, OWS, x402, OpenSSL
+
+indicators:
+  - seed/mnemonic/private-key regex matches anywhere in the tree
+  - wallet directory mounted writable into agent containers
+  - KEY/SEED env vars referenced in client-side (NEXT_PUBLIC_) code
+  - debug logging of signing material
+
+detection:
+  - gitleaks + RULE-SEC-005 wallet-key pattern gate on push/PR
+  - static scan forbids wallet material outside ows-mcp/x402-gateway processes
+  - scheduled regression re-scan of history
+  - CodeQL taint check on wallet-sensitive sinks
+
+mitigation:
+  - rotate/disable any exposed wallet; re-derive or fund from cold storage
+  - inject wallet secrets only into the OWS MCP process env at runtime
+  - keep agent processes non-custodial: they sign via gateway, never hold keys
+  - strip wallet bytes from all logs and telemetry
+  - mount wallet dirs read-only; run wallet services as non-root
+
+validation:
+  - RULE-SEC-005 gate passes: zero wallet-key matches in tree and history
+  - integration test: agent cannot access private key file permissions
+  - log assertion: no signing material in any audit log sample
+
+reference: SECURITY_POLICY.md Sections 5, 8.3, 12

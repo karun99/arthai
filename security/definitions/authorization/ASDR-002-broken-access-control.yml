@@ -1,0 +1,45 @@
+threat_id: ASDR-002
+name: Broken Access Control
+category: authorization
+severity: Critical
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description:
+  An actor (unauthenticated user, consumer, or a compromised agent) reaches an
+  endpoint, webhook, or MCP tool they are not authorized to use. In ArthAI this
+  means approving payments, reading KYC data, modifying wallet policy, or
+  invoking Razorpay settlement tools without the correct role.
+
+attack_pattern:
+  - missing or weak role checks on /api/arthai/* proxy routes or approval APIs
+  - webhook endpoints (razorpay) that trust unverified signatures or bodies
+  - MCP tool exposure without per-role allowlists
+  - direct object reference: guessing another vendor's campaign/catalog IDs
+
+affected_component: app/app/api, demo/app/api, backend/mcp-servers
+affected_technology: Next.js App Router, Node.js, Python/FastAPI
+
+indicators:
+  - endpoint returning data/actions for an unauthenticated request
+  - webhook handler not validating Razorpay signature header
+  - MCP tool registered without a required-role annotation
+
+detection:
+  - CodeQL security coverage on API routes
+  - authorization unit tests on approval and webhook handlers
+  - PR review checklist item for role checks on every new route
+
+mitigation:
+  - enforce role checks at the route layer via middleware/guard functions
+  - verify Razorpay webhook signatures before processing events
+  - scope MCP tools by role using server-side allowlists
+  - use non-guessable IDs and ownership checks on every object read
+
+validation:
+  - unauthenticated request to /api/arthai/payments/* returns 401/403
+  - forged webhook body without signature is rejected
+  - consumer token cannot reach vendor approval endpoints
+
+reference: SECURITY_POLICY.md Sections 5, 8.2

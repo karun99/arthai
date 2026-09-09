@@ -1,0 +1,47 @@
+threat_id: ASDR-003
+name: Injection
+category: injection
+severity: High
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description: >-
+  Untrusted input reaches an interpreter or an AI prompt boundary. ArthAI is
+  exposed on three injection surfaces: command injection via the S-AI spawn
+  call, prompt injection via consumer/vendor text that feeds the S-AI swarm and
+  recommendation engine, and SQL/NoSQL injection via search/filter parameters
+  into PostgreSQL or ChromaDB/Neo4j queries.
+
+attack_pattern:
+  - query string passed unsanitized into a child_process.spawn w/ shell:true
+  - catalog/comment text embedded directly into a prompt template
+  - GraphQL/query parameters interpolated into SQL/Cypher without parameterization
+  - demo mock routes mirroring the same (insecure) pattern for realism
+
+affected_component: app/lib/mcp-client.ts, app/app/api/arthai/think, backend/services, demo/app/api/mock
+affected_technology: Node.js, Next.js, Python, SQL, Cypher, LLM prompts
+
+indicators:
+  - child_process spawn with user-controlled command strings
+  - string-concatenated SQL/Cypher queries
+  - prompt templates that concatenate raw user text without escaping
+  - unvalidated JSON schema input on MCP borders
+
+detection:
+  - CodeQL injection queries on push/PR
+  - review gate flagging spawn/shell usage and query concatenation
+  - input-validation tests on all API routes
+
+mitigation:
+  - never use shell:true; pass arguments as arrays to spawn
+  - parameterize all SQL and Cypher queries
+  - treat LLM output as untrusted and validate against an allow/deny schema
+  - wrap user text in prompt delimiters and add instruction-hygiene preamble
+
+validation:
+  - injection fuzz tests on /api/arthai/think and recommendation endpoints
+  - static check rejects child_process spawn with shell:true
+  - demo fixtures include a prompt-injection case with expected rejection
+
+reference: SECURITY_POLICY.md Sections 5, 8.1, 8.2

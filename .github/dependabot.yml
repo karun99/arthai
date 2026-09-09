@@ -1,0 +1,123 @@
+# Dependabot configuration for github.com/karun99/arthai
+# Monorepo: demo/ and app/ (npm/Next.js), backend MCP servers and services
+# (npm and pip). Dependabot opens security/version-update PRs and reports
+# vulnerable versions via Dependabot Alerts.
+# See SECURITY_POLICY.md Sections 8.3, 16 and RULE-SEC-003.
+
+version: 2
+updates:
+  # ── npm / Node.js ecosystems ─────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/demo"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "security"]
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+
+  - package-ecosystem: "npm"
+    directory: "/app"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "security"]
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+
+  - package-ecosystem: "npm"
+    directory: "/backend/mcp-servers/vyapaar-mcp"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security", "mcp"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "npm"
+    directory: "/backend/mcp-servers/razorpay-mcp"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security", "mcp"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "npm"
+    directory: "/backend/mcp-servers/ows-mcp"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security", "mcp"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "npm"
+    directory: "/backend/mcp-servers/x402-gateway"
+    schedule:
+      interval: "daily"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security", "mcp"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  # ── Python / pip ecosystems ──────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/backend/services/predictive-engine"
+    schedule:
+      interval: "daily"
+      time: "05:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "pip"
+    directory: "/backend/services/rag-service"
+    schedule:
+      interval: "daily"
+      time: "05:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: "pip"
+    directory: "/backend/services/llm-orchestrator"
+    schedule:
+      interval: "daily"
+      time: "05:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "security"]
+    commit-message:
+      prefix: "chore(deps)"
+
+  # ── GitHub Actions self-updates ─────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "ci"]
+    commit-message:
+      prefix: "ci(deps)"

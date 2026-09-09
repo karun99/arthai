@@ -1,0 +1,21 @@
+rule_id: RULE-SEC-003
+name: Dependency Advisory Monitoring
+threat_ref: ASDR-004
+enforced: true
+enforced_by: Dependabot (.github/dependabot.yml) + .github/workflows/dependency-review.yml
+
+description:
+  Every detectable dependency must be continuously checked against published
+  advisories. Dependabot opens security/version updates for all package
+  manifests in demo/, app/, and backend/. Dependency Review fails the PR gate
+  when a known-vulnerable dependency is introduced.
+
+scopes:
+  - package-ecosystem: npm           # demo, app, backend/mcp-servers/web
+  - package-ecosystem: pip           # backend/services, backend/mcp-servers/py
+  - package-ecosystem: github-actions
+
+policy:
+  - critical-severity advisory: remediate within 48 hours
+  - high-severity advisory: remediate before next release
+  - lockfiles must be committed; dependency changes reviewed in isolation

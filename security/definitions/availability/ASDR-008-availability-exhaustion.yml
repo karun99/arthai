@@ -1,0 +1,48 @@
+threat_id: ASDR-008
+name: Availability Exhaustion
+category: availability
+severity: Medium
+status: active
+first_observed: 2026-09-09
+last_updated: 2026-09-09
+
+description: >-
+  Public endpoints (demo or live) are exhausted by unbounded requests: repeated
+  S-AI spawn invocations, unbounded LLM orchestration, un-throttled webhook
+  processing, or blocking Redis/DB calls. In the live app this can stall
+  approval screens (NFR-PERF-01, audit-trail UI < 3s) and prevent merchants
+  from approving/blocking payments.
+
+attack_pattern:
+  - unauthenticated /api/arthai/think spawning many s-ai processes
+  - webhook handler doing slow synchronous LLM work per event
+  - no rate limit on approval decision endpoints
+  - cron/agent loops firing retries without idempotency backoff
+
+affected_component: app/app/api, backend/services, app/api/webhooks
+affected_technology: Next.js, Node.js, Python, Redis, Vercel
+
+indicators:
+  - unbounded while/retry loops in agent code
+  - endpoints with no rate-limit or queueing
+  - synchronous external calls (LLM, webhook) inside request handler
+  - missing Redis Idempotency lock contention handling
+
+detection:
+  - code review flagging unbounded loops and sync external calls
+  - load smoke test on demo endpoint suite
+  - dependency scan for DoS-vulnerable parser packages
+
+mitigation:
+  - rate-limit public endpoints (per-key/IP) with Redis sliding window
+  - move LLM/webhook work to background queues (Redis/BullMQ) where possible
+  - enforce idempotency-key backoff on all agent payment attempts
+  - set timeouts + circuit breakers on external providers
+  - set container resource limits and HEALTHCHECKs
+
+validation:
+  - unit test: burst of 1000 approval calls is capped, budget not overspent
+  - regression: approval-screen timing assertion stays under 3s
+  - webhook handler returns 200 promptly after enqueueing
+
+reference: SECURITY_POLICY.md Sections 5, 7.2
