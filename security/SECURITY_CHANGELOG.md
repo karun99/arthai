@@ -2,6 +2,21 @@
 
 Records all security-policy and security-tooling changes in the arthai repository.
 
+## 2026-09-14 — v1.1: Cognitive-robotics (neural layer) definitions
+
+**Added**
+- `ASDR-011` Adversarial Neural Stimulation (High) — malicious signals injected
+  into organoid/MEA spike streams (impulse / patterned / poisoned / white-noise
+  / amplitude), the cognitive-robotics analogue of prompt injection.
+- `ASDR-012` Neural Coherence / Integrity Exhaustion (Medium) — legible-brain-state
+  availability for the neural security layer.
+- `definitions/neural/` category directory.
+- `RULE-SEC-006` cognitive-robotics adversarial gate; `RULE-SEC-007`
+  coherence/integrity regression gate.
+- `MITIG-011` adversarial-neural-stimulation runbook.
+- Validator asserts the `neural` directory, category, severity/status enum, and
+  the cognitive-robotics clarity block.
+
 ## 2026-09-09 — v1.0: Financial-grade security baseline
 
 **Added**

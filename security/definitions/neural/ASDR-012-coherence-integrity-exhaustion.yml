@@ -1,0 +1,48 @@
+threat_id: ASDR-012
+name: Neural Coherence / Integrity Exhaustion
+category: neural
+severity: Medium
+status: active
+first_observed: 2026-09-14
+last_updated: 2026-09-14
+
+description: >-
+  Sustained denial-of-clarity on a cognitive-robotics layer. The neural layer's
+  coherence and integrity metrics collapse or oscillate so that no trustworthy
+  control or identity decision can be made. Unlike ASDR-011 (a deliberate
+  injected signal), this covers degradation from strain, runaway reward memory,
+  or interpretation errors that make the brain-state unreadable — the neural
+  equivalent of availability exhaustion for a neural security layer.
+
+attack_pattern:
+  - sustained high-rate stimulation exhausting the coherence budget
+  - feedback loop runaway in reward_memory driving the encode intensity to 1.0
+  - electrode wear / decoder mis-calibration flattening synchrony
+  - starvation where mean_rate drops to 0 and information rate collapses
+
+affected_component: SpikeTensor metrics (mean_rate, synchrony, information_rate), ControlLoop reward memory, coherence scoring, validation gate
+affected_technology: SPIKE/MEA acquisition, spike statistics, closed-loop control
+
+indicators:
+  - coherence score pinned near 1.0 or 0.0 for extended windows
+  - isi_mean collapsed or isi_cv elevated well above normal variance
+  - reward_memory monotonically increasing across isolated episodes
+  - validation gate repeatedly WARN/FAIL on the neurobot check
+
+detection:
+  - integrity score (isi_cv + information-rate terms) tracked on every epoch
+  - coherence baseline recorded at idle and compared per episode
+  - rule RULE-SEC-007 blocks merge when the neural gate degrades
+
+mitigation:
+  - clamp reward_memory growth (decay on idle, cap at validation threshold)
+  - contrast-check decoder output against an independent spike statistic
+  - retain the baseline coherence benchmark for comparison on every run
+  - fail closed: no actuator command when coherence/integrity is indeterminate
+
+validation:
+  - stress suite shows mean_security_score degrading monotonically on escalation
+  - control loop refuses to arm when idle coherence is outside bounds
+  - regression suite re-checks after any metric/threshold change
+
+reference: DARPA O-CIRCUIT BPU integrity reporting; celebrate's neurobot adversarial suite baseline vs attacked coherence

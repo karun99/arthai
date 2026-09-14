@@ -49,6 +49,7 @@ REQUIRED_DIRS = [
     "definitions/automation",
     "definitions/availability",
     "definitions/finance",
+    "definitions/neural",
     "rules",
     "tests",
     "mitigations",
@@ -74,6 +75,7 @@ STATUSES = {"proposed", "validated", "active", "updated", "deprecated"}
 CATEGORIES = {
     "authentication", "authorization", "injection", "dependencies",
     "data", "infrastructure", "automation", "availability", "finance",
+    "neural",
 }
 
 # Low-false-positive credential shapes enforced by .github/workflows/security.yml.
@@ -96,6 +98,11 @@ SCAN_EXCLUDES = {"node_modules", ".git", ".next", "dist", "build", "__pycache__"
 FINANCE_EXPECTED = {
     "ASDR-009": {"threat_id": "ASDR-009", "severity": "Critical"},
     "ASDR-010": {"threat_id": "ASDR-010", "severity": "Critical"},
+}
+
+NEURAL_EXPECTED = {
+    "ASDR-011": {"threat_id": "ASDR-011", "severity": "High", "status": "active"},
+    "ASDR-012": {"threat_id": "ASDR-012", "severity": "Medium", "status": "active"},
 }
 
 
@@ -188,6 +195,19 @@ def main():
         if doc.get("status") != "active":
             fail(f"{tid} must be active")
         ok(f"{tid} severity={expected['severity']} status=active")
+
+    print("── Cognitive-robotics clarity (neural layer) ─────────")
+    for tid, expected in NEURAL_EXPECTED.items():
+        bump()
+        doc = definitions.get(tid, {}).get("doc", {})
+        if doc.get("threat_id") != expected["threat_id"]:
+            fail(f"neural definition {tid} missing or malformed")
+            continue
+        if doc.get("severity") != expected["severity"]:
+            fail(f"{tid} severity must be {expected['severity']}")
+        if doc.get("status") != expected["status"]:
+            fail(f"{tid} must be {expected['status']}")
+        ok(f"{tid} severity={expected['severity']} status={expected['status']}")
 
     print("── Detection rules ↔ definitions ─────────────────────")
     rules = 0

@@ -20,6 +20,8 @@ security/
 │   ├── availability/         #   ASDR-008  Availability Exhaustion
 │   └── finance/              #   ASDR-009  Agentic Payment Fraud
 │                             #   ASDR-010  Wallet Key / Seed Exposure
+└── neural/                  #   ASDR-011  Adversarial Neural Stimulation
+                            #   ASDR-012  Neural Coherence / Integrity Exhaustion
 ├── rules/                    # detection rules (RULE-SEC-*), enforced by CI
 ├── tests/                    # deterministic validation scripts
 ├── mitigations/              # runbooks for each threat (MITIG-*)
@@ -30,7 +32,9 @@ security/
 ## Governance
 
 - **Policy** — `SECURITY_POLICY.md` (v1.0) defines objectives, the mandatory
-  6-layer financial gate, lifecycle, severity, and incident response.
+  6-layer financial gate, lifecycle, severity, and incident response. v1.1 adds
+  the cognitive-robotics (neural) threat category for organoid/MEA-layer
+  adversarial stimulation and coherence-integrity exhaustion.
 - **Automation** — `.github/workflows/{security,codeql,dependency-review,security-regression,validate-security-layer}.yml`
   plus `.github/dependabot.yml`.
 - **Validation** — run `python3 security/tests/validate_security.py` locally;

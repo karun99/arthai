@@ -1,0 +1,17 @@
+rule_id: RULE-SEC-007
+name: Neural Coherence / Integrity Regression Gate
+threat_ref: ASDR-012
+enforced: true
+enforced_by: ".github/workflows/security-regression.yml (job: neural-coherence)"
+
+description: >-
+  The cognitive-robotics summary must not degrade across the lifecycle.
+  The idle coherence baseline and integrity score sampled on the reference
+  harness must stay inside configured bounds so the neural layer remains
+  legible (fail-closed policy).
+
+checks:
+  - record baseline coherence + integrity on the default harness
+  - reject spikes where coherence pins at 1.0 or 0.0 for consecutive windows
+  - reject isi_cv or information-rate collapse beyond the adaptive delta
+  - if the gate would WARN on the previous release, block merge until triaged

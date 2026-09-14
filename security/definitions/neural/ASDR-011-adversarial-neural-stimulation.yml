@@ -1,0 +1,52 @@
+threat_id: ASDR-011
+name: Adversarial Neural Stimulation
+category: neural
+severity: High
+status: active
+first_observed: 2026-09-14
+last_updated: 2026-09-14
+
+description:
+  Malicious signals injected into an organoid/MEA neural layer or its recorded
+  spike stream to corrupt the closed-loop control decision. Covers spontaneous
+  or patterned stimulation that inflates coherence, poisons the sensory or
+  motor electrode groups, or saturates the array so downstream decoding (motor
+  commands, anomaly scoring, identity recall) is manipulated. This is the
+  biology-adjacent analogue of prompt injection / data poisoning for
+  cognitive-robotics systems (DishBrain-style maze control, DARPA O-CIRCUIT
+  BPU counterparts).
+
+attack_pattern:
+  - impulse bursts across all electrodes to drive a fake 'action potential'
+  - patterned n-Hz periodic drive to inflate synchrony / coherence metrics
+  - electrode-group poisoning of the sensory or motor third of the array
+  - white-noise overlay to mask genuine neural signatures
+  - sustained amplitude elevation to exhaust rate-limiting / refractory logic
+
+affected_component: cognitive robotics loop (spike tensor -> control decode), neural coherence layer, MEA recording pipeline, s-ai/celebrum neurobot validation
+affected_technology: SpikeTensor arrays, ControlLoop decode, Python/Node neural sims
+
+indicators:
+  - mean firing rate or synchrony index moving far outside baseline bounds
+  - information rate delta exceeding the adaptive threshold
+  - impulse bursts confined to the leading time bins
+  - motor/sensory electrode group firing only when a specific stimulus is present
+
+detection:
+  - adversarial stress suite comparing baseline vs attacked spike statistics
+  - coherence/integrity metric regression in the validation harness
+  - rule RULE-SEC-006 on every neural-layer change and CI run
+
+mitigation:
+  - run adversarial_stress_test before enabling any closed-loop control mode
+  - require detected + mean_security_score >= 0.5 before maze/control activation
+  - keep the decode path independent of raw coincident firing (refractory +
+    per-electrode rate caps)
+  - log every stimulation epoch to the audit trail (identity/coherence memory)
+
+validation:
+  - adversarial suite flags catastrophic + poisoned classes as detected
+  - control loop rejects activation when stress level is high
+  - coherence baseline remains within bound during normal idling
+
+reference: DishBrain/organoid maze-control studies; DARPA O-CIRCUIT BPU security validation; celebrate's neurobot CognitiveRoboticsSec module

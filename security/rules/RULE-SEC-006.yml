@@ -1,0 +1,17 @@
+rule_id: RULE-SEC-006
+name: Cognitive-Robotics Adversarial Gate
+threat_ref: ASDR-011
+enforced: true
+enforced_by: ".github/workflows/security.yml (job: neural-validation)"
+
+description: >-
+  Any change touching a neural simulation, spike-tensor, control-loop, or
+  cognition validation module must pass the adversarial neural-security gate.
+  The implemented stress suite must flag catastrophic/poisoned classes as
+  detected and keep the mean security score at or above 0.5.
+
+checks:
+  - run the spike/control/adversarial validation harness with a seeded suite
+  - impulse-catastrophic and poisoned-* attacks must be detected
+  - mean_security_score >= 0.5, else the gate fails closed
+  - control-loop must not report solved with stress_level == high
